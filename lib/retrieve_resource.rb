@@ -7,27 +7,23 @@ module RetrieveResource
     def retrieve_resource(object_name, options = {}, &block)
       object_name = object_name.to_s
       options.reverse_merge!({:class_name => object_name.classify, :find_method => 'find'})
-
-      param_lookup = if options[:param]
-        param_lookup = "value = params['#{options[:param]}']"
-      else
-        <<-EOT
-          defaults = ['#{object_name}_id', 'id']
-          value = params[defaults.detect { |d| !params[d].nil? }]
-        EOT
-      end
+      options[:param] ||= "#{options[:class_name].pluralize}Controller" == name.demodulize ? 'id' : "#{object_name}_id"
       
-      resource = "retrieve_#{object_name}"
+      method_name = "retrieve_resource_#{object_name}"
+      filter_method_name = "#{method_name}_filter"
       module_eval <<-EOT, __FILE__, __LINE__
-        def #{resource}
-          #{param_lookup}
-          @#{object_name} ||= #{options[:class_name]}.#{options[:find_method]}(value)
+        def #{method_name}(value)
+          #{options[:class_name]}.#{options[:find_method]}(value)
         end
-        protected :#{resource}
+        
+        def #{filter_method_name}
+          @#{object_name} ||= #{method_name}(params['#{options[:param]}'])
+        end
+        protected :#{method_name}, :#{filter_method_name}
       EOT
 
       filter_options = options.reject { |key, value| !%w(only except).include?(key.to_s) }
-      prepend_before_filter resource, filter_options, &block
+      prepend_before_filter filter_method_name, filter_options, &block
     end
   end
 end
