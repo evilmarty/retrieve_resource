@@ -9,17 +9,22 @@ module RetrieveResource
       options.reverse_merge!({:class_name => object_name.classify, :find_method => 'find'})
       options[:param] ||= "#{options[:class_name].pluralize}Controller" == name.demodulize ? 'id' : "#{object_name}_id"
       
-      method_name = "retrieve_resource_#{object_name}"
-      filter_method_name = "#{method_name}_filter"
+      param_method_name = "retrieve_resource_by_param_#{options[:param]}"
+      class_method_name = "retrieve_resource_by_class_#{options[:class_name].underscore}"
+      filter_method_name = "retrieve_resource_#{object_name}_filter"
       module_eval <<-EOT, __FILE__, __LINE__
-        def #{method_name}(value)
-          #{options[:class_name]}.#{options[:find_method]}(value)
+        def #{param_method_name}(value)
+          #{class_method_name}(value)
+        end
+        
+        def #{class_method_name}(value)
+          #{options[:class_name].classify}.#{options[:find_method]}(value)
         end
         
         def #{filter_method_name}
-          @#{object_name} ||= #{method_name}(params['#{options[:param]}'])
+          @#{object_name} ||= #{param_method_name}(params['#{options[:param]}'])
         end
-        protected :#{method_name}, :#{filter_method_name}
+        protected :#{param_method_name}, :#{class_method_name}, :#{filter_method_name}
       EOT
 
       filter_options = options.reject { |key, value| !%w(only except).include?(key.to_s) }
