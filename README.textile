@@ -1,0 +1,75 @@
+Tired of repeatedly writing get methods for your resources? Then you need...
+
+h1. Retrieve Resource!
+
+Same yourself from carpal tunnel and other programming ailments when writing methods to fetch your resources.
+
+What use to be this:
+<pre>
+class PeopleController < ApplicationController
+  def get_person
+    person = Person.find(params[:id])
+  end
+end</pre>
+is now this:
+<pre>
+class PeopleController < ApplicationController
+  retrieve_resource :person
+end
+</pre>
+
+Have multiple resources? Then declare multiple retrievals:
+
+<pre>
+class CommentsController < ApplicationController
+  retrieve_resource :person, :param => :person_id
+  retrieve_resource :comment, :only => [:show, :edit, :update, :destroy]
+end
+</pre>
+
+h2. How does it work?
+
+Tell @retrieve_resource@ the name of the resource you want to load and it will load it. Based on the name specified it will get the name of your model and perform a find operation with the parameter from the request. But this baby allows you to have full control, just look at the options:
+
+* *class_name* - The name of the class if it cannot be inflected from the name passed.
+* *param* - The parameter passed to load the model. This defaults to {name}_id or {id} if the name is inflected of the controller name.
+* *find_method* - Default is _find_ but you can use another method. The argument passed is that from *params*
+
+You can also filter when a retrieval will be triggered. Even when a particular action occurs or when it doesn't occur, just like like Filters:http://api.rubyonrails.org/classes/ActionController/Filters/ClassMethods.html
+* *only* - Specify which actions to retrieve on
+* *except* - Specify which actions should not be retrieved on
+
+You can also pass in a block to evaluate whether retrieval should occur.
+
+h3. Example
+
+<pre>
+class ManagerController < ApplicationController
+  retrieve_resource :person, :class_name => 'Person', :param => :id, :find_method => :find_if_manager
+end
+</pre>
+
+h2. Versatility
+
+Sometimes you may have a situation where you need even more control over what gets retrieved and how. Thats when you override the retrieval method and do your own magic.
+
+<pre>
+class CommentsController < ApplicationController
+  retrieve_resource :person, :param => :person_id
+  retrieve_resource :comment, :only => [:show, :edit, :update, :destroy]
+protected
+  def retrieve_resource_comment(value)
+    @person.comments.find(value)
+  end
+end
+</pre>
+
+All you have to do is declare a method @retrieve_resource_{name}@, where name is the name specified in the macro. The argument is the value from @params@. If there is no value in @params@ then nil will be given. Then simply return the resource you want your instance variable to be set to, and voila!
+
+h2. TODO
+
+Put more of the processing code into the filter and not create a separate method/
+
+h2. Copyright
+
+Copyright (c) 2009 Marty Zalega, released under the MIT license
