@@ -5,27 +5,22 @@ h1. Retrieve Resource!
 Same yourself from carpal tunnel and other programming ailments when writing methods to fetch your resources.
 
 What use to be this:
-<pre>
-class PeopleController < ApplicationController
+<pre>class PeopleController < ApplicationController
   def get_person
     person = Person.find(params[:id])
   end
 end</pre>
 is now this:
-<pre>
-class PeopleController < ApplicationController
+<pre>class PeopleController < ApplicationController
   retrieve_resource :person
-end
-</pre>
+end</pre>
 
 Have multiple resources? Then declare multiple retrievals:
 
-<pre>
-class CommentsController < ApplicationController
+<pre>class CommentsController < ApplicationController
   retrieve_resource :person, :param => :person_id
   retrieve_resource :comment, :only => [:show, :edit, :update, :destroy]
-end
-</pre>
+end</pre>
 
 h2. How does it work?
 
@@ -43,28 +38,47 @@ You can also pass in a block to evaluate whether retrieval should occur.
 
 h3. Example
 
-<pre>
-class ManagerController < ApplicationController
+<pre>class ManagerController < ApplicationController
   retrieve_resource :person, :class_name => 'Person', :param => :id, :find_method => :find_if_manager
-end
-</pre>
+end</pre>
 
 h2. Versatility
 
-Sometimes you may have a situation where you need even more control over what gets retrieved and how. Thats when you override the retrieval method and do your own magic.
+Sometimes you may have a situation where you need even more control over what gets retrieved and how. Thats when you override the retrieval method and do your own magic. There are two ways you can do this, either on the parameter level or on the class level.
 
-<pre>
-class CommentsController < ApplicationController
+<pre>class CommentsController < ApplicationController
   retrieve_resource :person, :param => :person_id
   retrieve_resource :comment, :only => [:show, :edit, :update, :destroy]
 protected
-  def retrieve_resource_comment(value)
+  def retrieve_resource_by_class_comment(value)
     @person.comments.find(value)
   end
-end
-</pre>
+end</pre>
 
-All you have to do is declare a method @retrieve_resource_{name}@, where name is the name specified in the macro. The argument is the value from @params@. If there is no value in @params@ then nil will be given. Then simply return the resource you want your instance variable to be set to, and voila!
+In this example we declared the method @retrieve_resource_by_class_comment@, where _comment_ is the name of the class of the object. Simply return the record and retrieve_resource will set the correct instance variable for you. You can also override by parameter reference like so @retrieve_resource_by_param_id@, where _id_ is the parameter is that passed into @options["param"]@ (see *param* option above). 
+
+h2. Macro?
+
+Yes, retrieve_resource simply is a macro for you. This is what the plugin would look like:
+
+<pre>class PeopleController < ApplicationController
+  before_filter :retrieve_resource_person_filter, :only => [:show, :edit, :update, :destroy]
+  
+protected
+  def retrieve_resource_by_class_person(value)
+    Person.find(value)
+  end
+
+  def retrieve_resource_by_param_id
+    retrieve_resource_by_class_person(params[:id])
+  end
+
+  def retrieve_resource_person_filter
+    @person ||= retrieve_resource_by_param_id
+  end
+end</pre>
+
+Wow, all that in one little line of code? That's amazing I know!
 
 h2. TODO
 

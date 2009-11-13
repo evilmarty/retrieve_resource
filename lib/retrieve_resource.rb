@@ -13,8 +13,8 @@ module RetrieveResource
       class_method_name = "retrieve_resource_by_class_#{options[:class_name].underscore}"
       filter_method_name = "retrieve_resource_#{object_name}_filter"
       module_eval <<-EOT, __FILE__, __LINE__
-        def #{param_method_name}(value)
-          #{class_method_name}(value)
+        def #{param_method_name}
+          #{class_method_name}(params['#{options[:param]}'])
         end
         
         def #{class_method_name}(value)
@@ -22,7 +22,7 @@ module RetrieveResource
         end
         
         def #{filter_method_name}
-          @#{object_name} ||= #{param_method_name}(params['#{options[:param]}'])
+          @#{object_name} ||= #{param_method_name}
         end
         protected :#{param_method_name}, :#{class_method_name}, :#{filter_method_name}
       EOT
