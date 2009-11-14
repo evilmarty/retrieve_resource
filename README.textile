@@ -24,13 +24,17 @@ end</pre>
 
 h2. How does it work?
 
-Tell @retrieve_resource@ the name of the resource you want to load and it will load it. Based on the name specified it will get the name of your model and perform a find operation with the parameter from the request. But this baby allows you to have full control, just look at the options:
+Tell @retrieve_resource@ the name of the resource you want to load and it will load it. Based on the name specified it will get the name of your model and perform a find operation with the parameter from the request. But this baby allows you to have full control, just look at the options.
+
+h2. Options
 
 * *class_name* - The name of the class if it cannot be inflected from the name passed.
 * *param* - The parameter passed to load the model. This defaults to {name}_id or {id} if the name is inflected of the controller name.
 * *find_method* - Default is _find_ but you can use another method. The argument passed is that from *params*
 
-You can also filter when a retrieval will be triggered. Even when a particular action occurs or when it doesn't occur, just like like Filters:http://api.rubyonrails.org/classes/ActionController/Filters/ClassMethods.html
+Along with the options above you can specify "find":http://api.rubyonrails.org/classes/ActiveRecord/Base.html#M002263 options like _conditions_, _joins_, _includes_ and all those other goodies.
+
+You can also filter when a retrieval will be triggered. Even when a particular action occurs or when it doesn't occur, just like like "Filters":http://api.rubyonrails.org/classes/ActionController/Filters/ClassMethods.html
 * *only* - Specify which actions to retrieve on
 * *except* - Specify which actions should not be retrieved on
 
@@ -62,7 +66,7 @@ h2. Macro?
 Yes, retrieve_resource simply is a macro for you. This is what the plugin would look like:
 
 <pre>class PeopleController < ApplicationController
-  before_filter :retrieve_resource_person_filter, :only => [:show, :edit, :update, :destroy]
+  before_filter :retrieve_resource_person, :only => [:show, :edit, :update, :destroy]
   
 protected
   def retrieve_resource_by_class_person(value)
@@ -73,7 +77,7 @@ protected
     retrieve_resource_by_class_person(params[:id])
   end
 
-  def retrieve_resource_person_filter
+  def retrieve_resource_person
     @person ||= retrieve_resource_by_param_id
   end
 end</pre>
@@ -82,7 +86,7 @@ Wow, all that in one little line of code? That's amazing I know!
 
 h2. TODO
 
-Put more of the processing code into the filter and not create a separate method/
+Add support for retrieval through other resources
 
 h2. Copyright
 

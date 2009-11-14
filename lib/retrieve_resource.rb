@@ -14,8 +14,9 @@ module RetrieveResource
       object_method_name = "retrieve_resource_#{object_name}"
       
       define_method(class_method_name) do |value|
+        find_options = options.reject { |o| !VALID_FIND_OPTIONS.include?(o) }
         klass = options[:class_name].classify.constantize
-        method = klass.method(options[:find_method])
+        method = klass.method(options[:find_method], find_options)
         begin
           method.call value
         rescue Exception => e
