@@ -6,7 +6,7 @@ module RetrieveResource
   module ClassMethods
     def retrieve_resource(object_name, options = {}, &block)
       object_name = object_name.to_s
-      options.reverse_merge!({:class_name => object_name.classify, :find_method => 'find', :whinny => true})
+      options.reverse_merge!({:class_name => object_name.classify, :find_method => 'find', :whiny => true})
       options[:param] ||= "#{options[:class_name].pluralize}Controller" == name.demodulize ? 'id' : "#{object_name}_id"
       
       param_method_name = "retrieve_resource_by_param_#{options[:param]}"
@@ -14,13 +14,13 @@ module RetrieveResource
       object_method_name = "retrieve_resource_#{object_name}"
       
       define_method(class_method_name) do |value|
-        find_options = options.reject { |o| !VALID_FIND_OPTIONS.include?(o) }
         klass = options[:class_name].classify.constantize
-        method = klass.method(options[:find_method], find_options)
+        find_options = options.reject { |k, v| !klass.method(:instance_eval).call('VALID_FIND_OPTIONS').include?(k) }
+        method = klass.method(options[:find_method])
         begin
-          method.call value
+          method.call value, find_options
         rescue Exception => e
-          raise e if options[:whinny]
+          raise e if options[:whiny]
         end
       end
       
