@@ -34,6 +34,11 @@ h2. Options
 
 Along with the options above you can specify "find":http://api.rubyonrails.org/classes/ActiveRecord/Base.html#M002263 options like _conditions_, _joins_, _includes_ and all those other goodies.
 
+The following options allow for retrieving resources which are associated with another resource.
+
+* *through* - The name of the parent object or the object associated to the object you want to retrieve.
+* *as* - If the association name is different then the pluralization of the *class_name* above. For instance, you have @:subscriber@ but the association is call @:subscriptions@ then you would specify that.
+
 You can also filter when a retrieval will be triggered. Even when a particular action occurs or when it doesn't occur, just like like "Filters":http://api.rubyonrails.org/classes/ActionController/Filters/ClassMethods.html
 * *only* - Specify which actions to retrieve on
 * *except* - Specify which actions should not be retrieved on
@@ -48,45 +53,24 @@ end</pre>
 
 h2. Versatility
 
-Sometimes you may have a situation where you need even more control over what gets retrieved and how. Thats when you override the retrieval method and do your own magic. There are two ways you can do this, either on the parameter level or on the class level.
+Sometimes you want to retrieve an object that is associated with another object and with this plugin you can with a breeze.
 
-<pre>class CommentsController < ApplicationController
-  retrieve_resource :person, :param => :person_id
-  retrieve_resource :comment, :only => [:show, :edit, :update, :destroy]
-protected
-  def retrieve_resource_by_class_comment(value)
-    @person.comments.find(value)
-  end
+<pre>class Person < ActiveRecord::Base
+  has_many :comments
+end
+
+class Comment < ActiveRecord::Base; end
+
+class CommentsController < ApplicationController
+  retrieve_resource :person
+  retrieve_resource :comment, :through => :person
 end</pre>
 
-In this example we declared the method @retrieve_resource_by_class_comment@, where _comment_ is the name of the class of the object. Simply return the record and retrieve_resource will set the correct instance variable for you. You can also override by parameter reference like so @retrieve_resource_by_param_id@, where _id_ is the parameter is that passed into @options["param"]@ (see *param* option above). 
-
-h2. Macro?
-
-Yes, retrieve_resource simply is a macro for you. This is what the plugin would look like:
-
-<pre>class PeopleController < ApplicationController
-  before_filter :retrieve_resource_person, :only => [:show, :edit, :update, :destroy]
-  
-protected
-  def retrieve_resource_by_class_person(value)
-    Person.find(value)
-  end
-
-  def retrieve_resource_by_param_id
-    retrieve_resource_by_class_person(params[:id])
-  end
-
-  def retrieve_resource_person
-    @person ||= retrieve_resource_by_param_id
-  end
-end</pre>
-
-Wow, all that in one little line of code? That's amazing I know!
+Easy peasy ain't it! And you can still use all the other options like normal, change the *find_method* or *conditions* etc. And best of all you don't have to worry about the order. How about that!
 
 h2. TODO
 
-Add support for retrieval through other resources
+Improve associated retrieval
 
 h2. Copyright
 

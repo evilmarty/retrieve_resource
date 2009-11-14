@@ -14,18 +14,26 @@ module RetrieveResource
       object_method_name = "retrieve_resource_#{object_name}"
       
       define_method(class_method_name) do |value|
-        klass = options[:class_name].classify.constantize
-        find_options = options.reject { |k, v| !klass.method(:instance_eval).call('VALID_FIND_OPTIONS').include?(k) }
-        method = klass.method(options[:find_method])
+        find_options = options.reject { |k, v| !ActiveRecord::Base.method(:instance_eval).call('VALID_FIND_OPTIONS').include?(k) }
+        
         begin
-          method.call value, find_options
-        rescue Exception => e
+          if options[:through]
+            parent_method_name = "retrieve_resource_#{options[:through]}"
+            association_method_name = options[:as] || options[:class_name].pluralize.underscore
+            __send__(parent_method_name).__send__(association_method_name).__send__(options[:find_method], value, find_options)
+          else
+            klass = options[:class_name].classify.constantize
+            klass.__send__(options[:find_method], value, find_options)
+          end
+        rescue ActiveRecord::RecordNotFound => e
           raise e if options[:whiny]
+        rescue NoMethodError => e
+          raise e if options[:whiny] 
         end
       end
       
       define_method(param_method_name) do
-        send class_method_name, params[options[:param]]
+        __send__ class_method_name, params[options[:param]]
       end
       
       module_eval <<-EOT, __FILE__, __LINE__

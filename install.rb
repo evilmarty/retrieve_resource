@@ -1,1 +1,1 @@
-# Install hook code here
+puts "Symbiot inserted into host"

@@ -1,1 +1,1 @@
-# Uninstall hook code here
+puts "Symbiot detached from host"

@@ -11,8 +11,8 @@ class PeopleController < ActionController::Base
 end
 
 class CommentsController < ActionController::Base
-  retrieve_resource :comment, :only => [:show]
   retrieve_resource :person, :whiny => false
+  retrieve_resource :comment, :only => [:show], :through => :person
   
   def index
     render :text => @person
@@ -94,7 +94,7 @@ class QuiteControllerTest < ActionController::TestCase
   end
   
   def test_correct_primary_resource_retrieved
-    process :show, {:id => 1}
+    process :show, {:id => 1, :person_id => 1}
     assert_equal 'Birdman is better!', @response.body
   end
   
@@ -106,6 +106,18 @@ class QuiteControllerTest < ActionController::TestCase
   def test_resource_not_found
     assert_nothing_raised ActiveRecord::RecordNotFound do
       process :index, {:id => 3}
+    end
+  end
+  
+  def test_retrieval_from_different_parent
+    assert_raise ActiveRecord::RecordNotFound do
+      process :show, {:id => 1, :person_id => 2}
+    end
+  end
+  
+  def test_not_from_dependency
+    assert_raise NoMethodError do
+      process :show, {:id => 1}
     end
   end
 end
