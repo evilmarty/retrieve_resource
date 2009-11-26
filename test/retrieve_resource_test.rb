@@ -2,9 +2,14 @@ require File.dirname(__FILE__) + '/test_helper.rb'
 
 class PeopleController < ActionController::Base
   retrieve_resource :person, :conditions => {:firstname => 'John'}
+  retrieve_resource :friend, :class_name => :person, :through => :person, :only => :friend
   
   def show
     render :text => @person
+  end
+  
+  def friend
+    render :text => @friend
   end
   
   def rescue_action(e) raise e end
@@ -35,7 +40,7 @@ class NormalControllerTest < ActionController::TestCase
     @response = ActionController::TestResponse.new
     
     ActionController::Routing::Routes.draw do |map|
-      map.resources :people
+      map.resources :people, :member => {:friend => :get}
     end
   end
   
@@ -71,6 +76,12 @@ class NormalControllerTest < ActionController::TestCase
   
   def test_object_param_method
     assert_respond_to @controller, :retrieve_resource_by_param_id
+  end
+  
+  def test_retrieval_through_association_of_same_class
+    assert_nothing_raised SystemStackError do
+      process :friend, {:id => 1, :friend_id => 2}
+    end
   end
 end
 
