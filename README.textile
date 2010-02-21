@@ -1,3 +1,5 @@
+h1. THIS IS VERSION 2.0 OF RETRIEVE RESOURCE AND IS IN BETA. USE AT YOUR OWN RISK
+
 Tired of repeatedly writing get methods for your resources? Then you need...
 
 h1. Retrieve Resource!
